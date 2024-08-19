@@ -1,38 +1,104 @@
-.App {
+/* 在App.css中 */
+.slider {
+  -webkit-appearance: none;
+  width: 300px; /* 设置滑块的固定长度 */
+  height: 8px; /* 减小高度以适应圆角 */
+  border-radius: 10px; /* 添加圆角 */
+  background: transparent;
+  outline: none;
+  border: 2px solid #ccc; /* 添加边框 */
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  border: 2px solid #ddd; /* 为滑块按钮添加边框 */
+}
+
+.slider::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  border: 2px solid #ddd; /* 为滑块按钮添加边框 */
+}
+
+/* 样式为等长且带有渐变色 */
+.sliderHue {
+  background: linear-gradient(to right, red, orange, yellow, green, cyan, blue, violet);
+}
+
+.sliderSaturation {
+  background: linear-gradient(to right, #fff, #0000ff);
+}
+
+.sliderLightness {
+  background: linear-gradient(to right, #000, #fff);
+}
+.label {
+  margin-right: 20px; /* 增加标签和滑块之间的间距 */
+  white-space: nowrap;
+}
+
+.valueDisplay {
+  min-width: 40px;
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.buttonsContainer {
   display: flex;
-  flex-direction: column;
+  justify-content: space-around;
+  width: 100%;
+  max-width: 360px;
+}
+
+.button {
+  padding: 10px 20px;
+  margin: 0 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.container {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  min-width: 300px; /* 或者你可以使用固定的宽度，例如 width: 300px; */
+}
+.button {
+  padding: 12px 24px;
+  margin: 8px;
+  border: 2px solid black; /* 添加黑色边框 */
+  border-radius: 10px;
+  background-color: white; /* 设置背景颜色为白色 */
+  color: black; /* 设置文字颜色为黑色 */
+  font-size: 16px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s ease-in-out;
+}
+
+.button:hover {
+  background-color: black; /* 鼠标悬浮时背景变为黑色 */
+  color: white; /* 鼠标悬浮时文字变为白色 */
+  border-color: white; /* 鼠标悬浮时边框变为白色 */
+}
+
+.button:active {
+  background-color: grey; /* 鼠标点击时背景变为灰色 */
+  border-color: grey; /* 鼠标点击时边框变为灰色 */
+}
+
+.buttonsContainer {
+  display: flex;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  gap: 16px;
 }
 
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
