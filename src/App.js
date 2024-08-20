@@ -117,7 +117,7 @@ const App = () => {
     setOperationLogs([]);
 
     if (count + 1 === maxIterationsPerGroup) {
-      if (currentGroup < 5) {
+      if (currentGroup < 2) {
         setShowRestPrompt(true);
       } else {
         const csvData = generateCSV(updatedLogs);
@@ -211,9 +211,9 @@ const App = () => {
       { left: `hsl(${hsbToHsl(240, 2, 97).h}, ${hsbToHsl(240, 2, 97).s}%, ${hsbToHsl(240, 2, 97).l}%)`, right: `hsl(${hsbToHsl(240, 3, 57).h}, ${hsbToHsl(240, 3, 57).s}%, ${hsbToHsl(240, 3, 57).l}%)` },
       { left: `hsl(${hsbToHsl(240, 3, 57).h}, ${hsbToHsl(240, 3, 57).s}%, ${hsbToHsl(240, 3, 57).l}%)`, right: `hsl(${hsbToHsl(240, 3, 11).h}, ${hsbToHsl(240, 3, 11).s}%, ${hsbToHsl(240, 3, 11).l}%)` },
       // 新增三组
-      { left: `hsl(${hsbToHsl(240, 3, 57).h}, ${hsbToHsl(240, 3, 57).s}%, ${hsbToHsl(240, 3, 57).l}%)`, right: `hsl(${hsbToHsl(240, 2, 97).h}, ${hsbToHsl(240, 2, 97).s}%, ${hsbToHsl(240, 2, 97).l}%)` },
-      { left: `hsl(${hsbToHsl(240, 3, 11).h}, ${hsbToHsl(240, 3, 11).s}%, ${hsbToHsl(240, 3, 11).l}%)`, right: `hsl(${hsbToHsl(240, 3, 57).h}, ${hsbToHsl(240, 3, 57).s}%, ${hsbToHsl(240, 3, 57).l}%)` },
-      { left: `hsl(${hsbToHsl(240, 3, 11).h}, ${hsbToHsl(240, 3, 11).s}%, ${hsbToHsl(240, 3, 11).l}%)`, right: `hsl(${hsbToHsl(240, 2, 97).h}, ${hsbToHsl(240, 2, 97).s}%, ${hsbToHsl(240, 2, 97).l}%)` },
+      // { left: `hsl(${hsbToHsl(240, 3, 57).h}, ${hsbToHsl(240, 3, 57).s}%, ${hsbToHsl(240, 3, 57).l}%)`, right: `hsl(${hsbToHsl(240, 2, 97).h}, ${hsbToHsl(240, 2, 97).s}%, ${hsbToHsl(240, 2, 97).l}%)` },
+      // { left: `hsl(${hsbToHsl(240, 3, 11).h}, ${hsbToHsl(240, 3, 11).s}%, ${hsbToHsl(240, 3, 11).l}%)`, right: `hsl(${hsbToHsl(240, 3, 57).h}, ${hsbToHsl(240, 3, 57).s}%, ${hsbToHsl(240, 3, 57).l}%)` },
+      // { left: `hsl(${hsbToHsl(240, 3, 11).h}, ${hsbToHsl(240, 3, 11).s}%, ${hsbToHsl(240, 3, 11).l}%)`, right: `hsl(${hsbToHsl(240, 2, 97).h}, ${hsbToHsl(240, 2, 97).s}%, ${hsbToHsl(240, 2, 97).l}%)` },
     ];
 
     const shuffledBackgrounds = backgroundCombos.sort(() => Math.random() - 0.5);
