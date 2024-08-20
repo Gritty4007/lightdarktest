@@ -38,6 +38,18 @@ const App = () => {
     };
   }
 
+  function hslToHsv(h, s, l) {
+    s /= 100;
+    l /= 100;
+    let v = l + s * Math.min(l, 1 - l);
+    let sv = v === 0 ? 0 : 2 * (1 - l / v);
+    return {
+      h: h,
+      s: sv * 100,
+      v: v * 100,
+    };
+  }
+
   function createColorPool() {
     const hues = [60, 120, 180, 240, 300, 360];
     const saturations = [33.3, 66.7, 99.9];
@@ -85,13 +97,17 @@ const App = () => {
   };
 
   const handleSubmit = () => {
+    // 转换当前背景为HSV
+    const leftBackgroundHsv = hslToHsv(...currentBackground.left.match(/\d+/g).map(Number));
+    const rightBackgroundHsv = hslToHsv(...currentBackground.right.match(/\d+/g).map(Number));
+
     const newLog = {
       group: currentGroup + 1,
       iteration: count + 1,
       leftColor: `hsb(${leftHue}, ${leftSaturation}%, ${leftBrightness}%)`,
       rightColor: `hsb(${hue}, ${saturation}%, ${brightness}%)`,
-      leftBackground: currentBackground.left,
-      rightBackground: currentBackground.right,
+      leftBackground: `hsv(${leftBackgroundHsv.h}, ${leftBackgroundHsv.s}%, ${leftBackgroundHsv.v}%)`,
+      rightBackground: `hsv(${rightBackgroundHsv.h}, ${rightBackgroundHsv.s}%, ${rightBackgroundHsv.v}%)`,
       operations: operationLogs.map(op => `${op.type}:${op.value}`).join(', '),
     };
 
