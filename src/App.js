@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { saveAs } from 'file-saver';
 import './App.css';
 
@@ -9,8 +9,9 @@ const App = () => {
   const [brightness, setBrightness] = useState(50);
   const [lightness, setLightness] = useState(50);
   const [colorPool, setColorPool] = useState([]);
+  const colorPoolRef = useRef([]);
   const [leftHue, setLeftHue] = useState(0);
-  const [leftSaturation, setLeftSaturation] =useState(50);
+  const [leftSaturation, setLeftSaturation] = useState(50);
   const [leftBrightness, setLeftBrightness] = useState(50);
   const [progress, setProgress] = useState(0);
   const [count, setCount] = useState(0);
@@ -51,19 +52,21 @@ const App = () => {
       }
     }
 
-    return [...colors];
+    console.log("Created colorPool:", colors); // 调试输出
+    return [...colors]; // 确保返回深拷贝
   }
 
   function getRandomColor() {
-    if (colorPool.length === 0) {
+    if (colorPoolRef.current.length === 0) {
       console.error("No colors left in the pool!");
       return null;
     }
-    const randomIndex = Math.floor(Math.random() * colorPool.length);
-    const selectedColor = colorPool[randomIndex];
-    const updatedPool = colorPool.filter((_, index) => index !== randomIndex);
-    console.log(updatedPool);
-    setColorPool(updatedPool);
+    const randomIndex = Math.floor(Math.random() * colorPoolRef.current.length);
+    const selectedColor = colorPoolRef.current[randomIndex];
+    const updatedPool = colorPoolRef.current.filter((_, index) => index !== randomIndex);
+    colorPoolRef.current = updatedPool; // 更新ref
+
+    setColorPool([...updatedPool]); // 更新state，仅用于调试
 
     return selectedColor;
   }
@@ -164,9 +167,10 @@ const App = () => {
 
     // 重新填充颜色池
     const newColorPool = createColorPool();
-    setColorPool([...newColorPool]);
-    console.log(newColorPool);
-    console.log(colorPool);
+    console.log("Setting new colorPool:", newColorPool); // 调试输出
+    colorPoolRef.current = [...newColorPool];
+    setColorPool([...newColorPool]); // 仅用于调试
+
     if (backgrounds.length > nextGroup) {
       setCurrentBackground(backgrounds[nextGroup]);
       updateColors();
@@ -176,7 +180,9 @@ const App = () => {
   useEffect(() => {
     // 初始化 colorPool 和颜色
     const initialColorPool = createColorPool();
-    setColorPool([...initialColorPool]);
+    console.log("Initial colorPool:", initialColorPool); // 调试输出
+    colorPoolRef.current = [...initialColorPool];
+    setColorPool([...initialColorPool]); // 仅用于调试
     updateColors();
 
     const backgroundCombos = [
