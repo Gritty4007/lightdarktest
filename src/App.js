@@ -90,6 +90,8 @@ const App = () => {
       iteration: count + 1,
       leftColor: `hsb(${leftHue}, ${leftSaturation}%, ${leftBrightness}%)`,
       rightColor: `hsb(${hue}, ${saturation}%, ${brightness}%)`,
+      leftBackground: currentBackground.left,
+      rightBackground: currentBackground.right,
       operations: operationLogs.map(op => `${op.type}:${op.value}`).join(', '),
     };
 
@@ -129,12 +131,14 @@ const App = () => {
   };
 
   const generateCSV = (data) => {
-    const header = ['Group', 'Iteration', 'Left Color', 'Right Color', 'Operations'];
+    const header = ['Group', 'Iteration', 'Left Color', 'Right Color', 'Left Background', 'Right Background', 'Operations'];
     const rows = data.map(log => [
       log.group,
       log.iteration,
       log.leftColor,
       log.rightColor,
+      log.leftBackground,  // 包含左边背景颜色
+      log.rightBackground, // 包含右边背景颜色
       log.operations
     ]);
 
