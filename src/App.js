@@ -38,17 +38,30 @@ const App = () => {
     };
   }
 
-  function hslToHsv(h, s, l) {
-    s /= 100;
-    l /= 100;
-    let v = l + s * Math.min(l, 1 - l);
-    let sv = v === 0 ? 0 : 2 * (1 - l / v);
-    return {
-      h: h,
-      s: sv * 100,
-      v: v * 100,
-    };
+  function areValuesClose(value1, value2, tolerance = 10) {
+    return Math.abs(value1 - value2) < tolerance;
   }
+  
+  function getBackgroundCategory(h, s, l) {
+    // 定义目标 HSV 值并转换为 HSL
+    const whiteHsl = hsbToHsl(240, 2, 97);
+    const grayHsl = hsbToHsl(240, 3, 57);
+    const blackHsl = hsbToHsl(240, 3, 11);
+
+    console.log('Comparing HSL:', {h, s, l}, 'with white:', whiteHsl, 'gray:', grayHsl, 'black:', blackHsl); // 调试信息
+
+    // 比较当前 HSL 值与转换后的 HSL 值
+    if (areValuesClose(h, whiteHsl.h) && areValuesClose(s, whiteHsl.s) && areValuesClose(l, whiteHsl.l)) {
+      return 'white';
+    } else if (areValuesClose(h, grayHsl.h) && areValuesClose(s, grayHsl.s) && areValuesClose(l, grayHsl.l)) {
+      return 'gray';
+    } else if (areValuesClose(h, blackHsl.h) && areValuesClose(s, blackHsl.s) && areValuesClose(l, blackHsl.l)) {
+      return 'black';
+    } else {
+      return 'unknown';
+    }
+  }
+  
 
   function createColorPool() {
     const hues = [60, 120, 180, 240, 300, 360];
@@ -95,19 +108,30 @@ const App = () => {
     setBrightness(newBrightness);
     setOperationLogs([...operationLogs, { type: 'V', value: newBrightness }]);
   };
-
+  function extractHslValues(hslString, hslRegex) {
+    const match = hslString.match(hslRegex);
+    if (match) {
+        return [parseFloat(match[1]), parseFloat(match[3]), parseFloat(match[5])];
+    } else {
+        console.error('Failed to match HSL string:', hslString);
+        return [0, 0, 0];  // 默认返回 [0, 0, 0] 以防止错误
+    }
+}
   const handleSubmit = () => {
-    // 转换当前背景为HSV
-    const leftBackgroundHsv = hslToHsv(...currentBackground.left.match(/\d+/g).map(Number));
-    const rightBackgroundHsv = hslToHsv(...currentBackground.right.match(/\d+/g).map(Number));
+    const hslRegex = /hsl\((\d+(\.\d+)?),\s*(\d+(\.\d+)?)%?,\s*(\d+(\.\d+)?)%?\)/;
+    const leftHslMatch = extractHslValues(currentBackground.left, hslRegex);
+    const rightHslMatch = extractHslValues(currentBackground.right, hslRegex);
+
+    const leftBackgroundCategory = getBackgroundCategory(leftHslMatch[0], leftHslMatch[1], leftHslMatch[2]);
+    const rightBackgroundCategory = getBackgroundCategory(rightHslMatch[0], rightHslMatch[1], rightHslMatch[2]);
 
     const newLog = {
       group: currentGroup + 1,
       iteration: count + 1,
       leftColor: `hsb(${leftHue}, ${leftSaturation}%, ${leftBrightness}%)`,
       rightColor: `hsb(${hue}, ${saturation}%, ${brightness}%)`,
-      leftBackground: `hsv(${leftBackgroundHsv.h}, ${leftBackgroundHsv.s}%, ${leftBackgroundHsv.v}%)`,
-      rightBackground: `hsv(${rightBackgroundHsv.h}, ${rightBackgroundHsv.s}%, ${rightBackgroundHsv.v}%)`,
+      leftBackground: leftBackgroundCategory,  // 记录背景类别
+      rightBackground: rightBackgroundCategory, // 记录背景类别
       operations: operationLogs.map(op => `${op.type}:${op.value}`).join(', '),
     };
 
@@ -211,9 +235,9 @@ const App = () => {
       { left: `hsl(${hsbToHsl(240, 2, 97).h}, ${hsbToHsl(240, 2, 97).s}%, ${hsbToHsl(240, 2, 97).l}%)`, right: `hsl(${hsbToHsl(240, 3, 57).h}, ${hsbToHsl(240, 3, 57).s}%, ${hsbToHsl(240, 3, 57).l}%)` },
       { left: `hsl(${hsbToHsl(240, 3, 57).h}, ${hsbToHsl(240, 3, 57).s}%, ${hsbToHsl(240, 3, 57).l}%)`, right: `hsl(${hsbToHsl(240, 3, 11).h}, ${hsbToHsl(240, 3, 11).s}%, ${hsbToHsl(240, 3, 11).l}%)` },
       // 新增三组
-      // { left: `hsl(${hsbToHsl(240, 3, 57).h}, ${hsbToHsl(240, 3, 57).s}%, ${hsbToHsl(240, 3, 57).l}%)`, right: `hsl(${hsbToHsl(240, 2, 97).h}, ${hsbToHsl(240, 2, 97).s}%, ${hsbToHsl(240, 2, 97).l}%)` },
-      // { left: `hsl(${hsbToHsl(240, 3, 11).h}, ${hsbToHsl(240, 3, 11).s}%, ${hsbToHsl(240, 3, 11).l}%)`, right: `hsl(${hsbToHsl(240, 3, 57).h}, ${hsbToHsl(240, 3, 57).s}%, ${hsbToHsl(240, 3, 57).l}%)` },
-      // { left: `hsl(${hsbToHsl(240, 3, 11).h}, ${hsbToHsl(240, 3, 11).s}%, ${hsbToHsl(240, 3, 11).l}%)`, right: `hsl(${hsbToHsl(240, 2, 97).h}, ${hsbToHsl(240, 2, 97).s}%, ${hsbToHsl(240, 2, 97).l}%)` },
+      { left: `hsl(${hsbToHsl(240, 3, 57).h}, ${hsbToHsl(240, 3, 57).s}%, ${hsbToHsl(240, 3, 57).l}%)`, right: `hsl(${hsbToHsl(240, 2, 97).h}, ${hsbToHsl(240, 2, 97).s}%, ${hsbToHsl(240, 2, 97).l}%)` },
+      { left: `hsl(${hsbToHsl(240, 3, 11).h}, ${hsbToHsl(240, 3, 11).s}%, ${hsbToHsl(240, 3, 11).l}%)`, right: `hsl(${hsbToHsl(240, 3, 57).h}, ${hsbToHsl(240, 3, 57).s}%, ${hsbToHsl(240, 3, 57).l}%)` },
+      { left: `hsl(${hsbToHsl(240, 3, 11).h}, ${hsbToHsl(240, 3, 11).s}%, ${hsbToHsl(240, 3, 11).l}%)`, right: `hsl(${hsbToHsl(240, 2, 97).h}, ${hsbToHsl(240, 2, 97).s}%, ${hsbToHsl(240, 2, 97).l}%)` },
     ];
 
     const shuffledBackgrounds = backgroundCombos.sort(() => Math.random() - 0.5);
