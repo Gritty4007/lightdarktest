@@ -231,7 +231,7 @@ const App = () => {
 
     const backgroundCombos = [
       // 原始三组
-      { left: `hsl(${hsbToHsl(240, 2, 97).h}, ${hsbToHsl(240, 2, 97).s}%, ${hsbToHsl(240, 2, 97).l}%)`, right: `hsl(${hsbToHsl(240, 7, 13).h}, ${hsbToHsl(240, 7, 13).s}%, ${hsbToHsl(240, 7, 12).l}%)` },
+      { left: `hsl(${hsbToHsl(240, 2, 97).h}, ${hsbToHsl(240, 2, 97).s}%, ${hsbToHsl(240, 2, 97).l}%)`, right: `hsl(${hsbToHsl(240, 7, 12).h}, ${hsbToHsl(240, 7, 12).s}%, ${hsbToHsl(240, 7, 12).l}%)` },
       { left: `hsl(${hsbToHsl(240, 2, 97).h}, ${hsbToHsl(240, 2, 97).s}%, ${hsbToHsl(240, 2, 97).l}%)`, right: `hsl(${hsbToHsl(240, 3, 58).h}, ${hsbToHsl(240, 3, 58).s}%, ${hsbToHsl(240, 3, 58).l}%)` },
       { left: `hsl(${hsbToHsl(240, 3, 58).h}, ${hsbToHsl(240, 3, 58).s}%, ${hsbToHsl(240, 3, 58).l}%)`, right: `hsl(${hsbToHsl(240, 7, 12).h}, ${hsbToHsl(240, 7, 12).s}%, ${hsbToHsl(240, 7, 12).l}%)` },
       // 新增三组
