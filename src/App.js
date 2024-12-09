@@ -277,7 +277,7 @@ const App = () => {
               <span className="valueDisplay">{saturation}</span>
             </div>
             <div className="container">
-              <span className="label">B:亮度</span>
+              <span className="label">V:亮度</span>
               <input type="range" min="0" max="100" value={brightness} onChange={handleBrightnessChange} step='0.1' className="slider sliderLightness" />
               <span className="valueDisplay">{brightness}</span>
             </div>
