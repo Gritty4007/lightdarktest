@@ -162,7 +162,7 @@ const App = () => {
     <div style={{ width: '1920px', height: '1080px', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: 3, display: 'flex' }}>
         {/* 左侧明模式显示 */}
-        <div style={{ flex: 1, backgroundColor: [hsbToHsl(240, 2, 11).h, hsbToHsl(240, 2, 11).s, hsbToHsl(240, 2, 11).l], display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <div style={{ flex: 1, backgroundColor: [hsbToHsl(240, 2, 97).h, hsbToHsl(240, 2, 97).s, hsbToHsl(240, 2, 97).l], display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <div style={{ 
             width: '60px', 
             height: '60px', 
@@ -171,7 +171,7 @@ const App = () => {
         </div>
         
         {/* 右侧暗模式显示 */}
-        <div style={{ flex: 1, backgroundColor: [hsbToHsl(240, 3, 97).h, hsbToHsl(240, 3, 97).s, hsbToHsl(240, 3, 97).l], display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <div style={{ flex: 1, backgroundColor: [hsbToHsl(240, 3, 11).h, hsbToHsl(240, 3, 11).s, hsbToHsl(240, 3, 11).l], display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <div style={{ 
             width: '60px', 
             height: '60px', 
