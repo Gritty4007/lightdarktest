@@ -3,6 +3,16 @@ import { saveAs } from 'file-saver';
 import './App.css';
 
 const App = () => {
+  // 明度映射表（精确到小数点后两位）
+  const brightnessMap = new Map([
+    [0, 0], [5, 1.17], [10, 2.27], [15, 3.28], [20, 5.43],
+    [25, 7.83], [30, 9.79], [35, 13.07], [40, 16.81], [45, 19.66],
+    [50, 23.91], [55, 26.79], [60, 33.25], [65, 35.42], [70, 41.13],
+    [75, 47.82], [80, 53.88], [85, 59.63], [90, 66.01], [95, 75.42],
+    [100, 90.71]
+  ]);
+
+  // 状态管理
   const [logs, setLogs] = useState([]);
   const [hue, setHue] = useState(0);
   const [saturation, setSaturation] = useState(50);
@@ -13,16 +23,12 @@ const App = () => {
   const [leftHue, setLeftHue] = useState(0);
   const [leftSaturation, setLeftSaturation] = useState(50);
   const [leftBrightness, setLeftBrightness] = useState(50);
-  const [progress, setProgress] = useState(0);
   const [count, setCount] = useState(0);
-  const [backgrounds, setBackgrounds] = useState([]);
-  const [currentBackground, setCurrentBackground] = useState({});
-  const [currentGroup, setCurrentGroup] = useState(0);
-  const [showRestPrompt, setShowRestPrompt] = useState(false);
   const [operationLogs, setOperationLogs] = useState([]);
 
-  const maxIterationsPerGroup = 54;
+  const totalIterations = 121;
 
+  // HSB转HSL函数（保持不变）
   function hsbToHsl(h, s, b) {
     h /= 360;
     s /= 100;
@@ -38,258 +44,173 @@ const App = () => {
     };
   }
 
-  function areValuesClose(value1, value2, tolerance = 10) {
-    return Math.abs(value1 - value2) < tolerance;
-  }
-  
-  function getBackgroundCategory(h, s, l) {
-    // 定义目标 HSV 值并转换为 HSL
-    const whiteHsl = hsbToHsl(240, 2, 97);
-    const grayHsl = hsbToHsl(240, 3, 57);
-    const blackHsl = hsbToHsl(240, 3, 11);
-
-    console.log('Comparing HSL:', {h, s, l}, 'with white:', whiteHsl, 'gray:', grayHsl, 'black:', blackHsl); // 调试信息
-
-    // 比较当前 HSL 值与转换后的 HSL 值
-    if (areValuesClose(h, whiteHsl.h) && areValuesClose(s, whiteHsl.s) && areValuesClose(l, whiteHsl.l)) {
-      return 'white';
-    } else if (areValuesClose(h, grayHsl.h) && areValuesClose(s, grayHsl.s) && areValuesClose(l, grayHsl.l)) {
-      return 'gray';
-    } else if (areValuesClose(h, blackHsl.h) && areValuesClose(s, blackHsl.s) && areValuesClose(l, blackHsl.l)) {
-      return 'black';
-    } else {
-      return 'unknown';
-    }
-  }
-  
-
+  // 创建颜色池（121色）
   function createColorPool() {
-    const hues = [60, 120, 180, 240, 300, 360];
-    const saturations = [33.3, 66.7, 99.9];
-    const brightnesses = [33.3, 66.7, 99.9];
+    const saturationLevels = Array.from({length: 11}, (_, i) => i * 10);
+    const brightnessLevels = Array.from({length: 11}, (_, i) => i * 10);
     let colors = [];
 
-    for (let h of hues) {
-      for (let s of saturations) {
-        for (let b of brightnesses) {
-          colors.push({ h, s, b });
-        }
-      }
-    }
+    brightnessLevels.forEach(v => {
+      saturationLevels.forEach(s => {
+        colors.push({
+          h: Math.random() * 360,    // 随机色相
+          s: s,                      // 0-100，步长10
+          v: v,                      // 0-100，步长10
+          darkV: brightnessMap.get(v)// 映射后的暗模式明度
+        });
+      });
+    });
 
-    console.log("Created colorPool:", colors); // 调试输出
-    return [...colors]; // 确保返回深拷贝
+    return colors.sort(() => Math.random() - 0.5); // 打乱顺序
   }
 
-  function getRandomColor() {
-    if (colorPoolRef.current.length === 0) {
-      console.error("No colors left in the pool!");
-      return null;
-    }
-    const randomIndex = Math.floor(Math.random() * colorPoolRef.current.length);
-    const selectedColor = colorPoolRef.current[randomIndex];
-    const updatedPool = colorPoolRef.current.filter((_, index) => index !== randomIndex);
-    colorPoolRef.current = updatedPool; // 更新ref
+  // 获取下一个颜色
+  const getNextColor = () => {
+    if (colorPoolRef.current.length === 0) return null;
+    const nextColor = colorPoolRef.current.shift();
+    setColorPool([...colorPoolRef.current]);
+    return nextColor;
+  };
 
-    setColorPool([...updatedPool]); // 更新state，仅用于调试
-
-    return selectedColor;
-  }
-
+  // 饱和度改变处理
   const handleSaturationChange = (event) => {
-    const newSaturation = event.target.value;
+    const newSaturation = parseFloat(event.target.value);
     setSaturation(newSaturation);
     setOperationLogs([...operationLogs, { type: 'S', value: newSaturation }]);
   };
 
-  const handleBrightnessChange = (event) => {
-    const newBrightness = event.target.value;
-    setLightness(hsbToHsl(hue, saturation, newBrightness).l);
-    setBrightness(newBrightness);
-    setOperationLogs([...operationLogs, { type: 'V', value: newBrightness }]);
-  };
-  function extractHslValues(hslString, hslRegex) {
-    const match = hslString.match(hslRegex);
-    if (match) {
-        return [parseFloat(match[1]), parseFloat(match[3]), parseFloat(match[5])];
-    } else {
-        console.error('Failed to match HSL string:', hslString);
-        return [0, 0, 0];  // 默认返回 [0, 0, 0] 以防止错误
-    }
-}
+  // 提交处理
   const handleSubmit = () => {
-    const hslRegex = /hsl\((\d+(\.\d+)?),\s*(\d+(\.\d+)?)%?,\s*(\d+(\.\d+)?)%?\)/;
-    const leftHslMatch = extractHslValues(currentBackground.left, hslRegex);
-    const rightHslMatch = extractHslValues(currentBackground.right, hslRegex);
-
-    const leftBackgroundCategory = getBackgroundCategory(leftHslMatch[0], leftHslMatch[1], leftHslMatch[2]);
-    const rightBackgroundCategory = getBackgroundCategory(rightHslMatch[0], rightHslMatch[1], rightHslMatch[2]);
-
     const newLog = {
-      group: currentGroup + 1,
       iteration: count + 1,
-      leftColor: `hsb(${leftHue}, ${leftSaturation}%, ${leftBrightness}%)`,
-      rightColor: `hsb(${hue}, ${saturation}%, ${brightness}%)`,
-      leftBackground: leftBackgroundCategory,  // 记录背景类别
-      rightBackground: rightBackgroundCategory, // 记录背景类别
-      operations: operationLogs.map(op => `${op.type}:${op.value}`).join(', '),
+      baseHue: leftHue,
+      baseSaturation: leftSaturation,
+      baseBrightness: leftBrightness,
+      adjustedSaturation: saturation,
+      darkBrightness: brightnessMap.get(leftBrightness),
+      operations: operationLogs.map(op => `${op.type}:${op.value.toFixed(2)}`).join(', ')
     };
 
-    const updatedLogs = [...logs, newLog];
-    setLogs(updatedLogs);
+    setLogs([...logs, newLog]);
     setCount(count + 1);
     setOperationLogs([]);
 
-    if (count + 1 === maxIterationsPerGroup) {
-      if (currentGroup < 2) {
-        setShowRestPrompt(true);
-      } else {
-        const csvData = generateCSV(updatedLogs);
-        const blob = new Blob([csvData], { type: "text/csv;charset=utf-8" });
-        saveAs(blob, "color-logs.csv");
-        alert('All groups completed. Logs have been saved.');
-        window.close();
-      }
+    // 完成所有实验时导出
+    if (count + 1 === totalIterations) {
+      const csvData = generateCSV(logs);
+      const blob = new Blob([csvData], { type: "text/csv;charset=utf-8" });
+      saveAs(blob, `saturation-study-${Date.now()}.csv`);
+      alert('实验完成，数据已保存');
+      window.close();
     } else {
       updateColors();
     }
   };
 
+  // 更新颜色显示
   const updateColors = () => {
-    const color = getRandomColor();
+    const color = getNextColor();
     if (color) {
-      setHue(color.h);
-      setSaturation(color.s);
-      setBrightness(color.b);
-      setLightness(hsbToHsl(color.h, color.s, color.b).l);
-
-      // 同步更新左侧色块
+      // 明模式参数
       setLeftHue(color.h);
       setLeftSaturation(color.s);
-      setLeftBrightness(color.b);
+      setLeftBrightness(color.v);
+
+      // 暗模式初始参数
+      setHue(color.h);
+      setSaturation(50); // 初始饱和度50%
+      setBrightness(color.darkV);
+      setLightness(hsbToHsl(color.h, 50, color.darkV).l);
     }
   };
 
+  // 生成CSV数据
   const generateCSV = (data) => {
-    const header = ['Group', 'Iteration', 'Left Color', 'Right Color', 'Left Background', 'Right Background', 'Operations'];
+    const header = [
+      '序号',
+      '基础色相',
+      '基础饱和度',
+      '基础明度',
+      '调整后饱和度', 
+      '暗模式明度',
+      '操作记录'
+    ];
+    
     const rows = data.map(log => [
-      log.group,
       log.iteration,
-      log.leftColor,
-      log.rightColor,
-      log.leftBackground,  // 包含左边背景颜色
-      log.rightBackground, // 包含右边背景颜色
+      log.baseHue.toFixed(2),
+      log.baseSaturation.toFixed(2),
+      log.baseBrightness.toFixed(2),
+      log.adjustedSaturation.toFixed(2),
+      log.darkBrightness.toFixed(2),
       log.operations
     ]);
 
-    const csvContent = [header, ...rows].map(e => e.join(",")).join("\n");
-    return csvContent;
+    return [header, ...rows].map(e => e.join(",")).join("\n");
   };
 
-  const handleExit = () => {
-    const confirmExit = window.confirm('Are you sure you want to exit? All logs will be saved.');
-    if (confirmExit) {
-      const csvData = generateCSV(logs);
-      const blob = new Blob([csvData], { type: "text/csv;charset=utf-8" });
-      saveAs(blob, "color-logs.csv");
-      window.close();
-    }
-  };
-
-  const handleReset = () => {
-    setHue(leftHue);
-    setSaturation(leftSaturation);
-    setBrightness(leftBrightness);
-    setLightness(hsbToHsl(leftHue, leftSaturation, leftBrightness).l);
-  };
-
-  const proceedToNextGroup = () => {
-    const nextGroup = currentGroup + 1;
-    setCurrentGroup(nextGroup);
-    setCount(0);
-    setShowRestPrompt(false);
-
-    // 重新填充颜色池
-    const newColorPool = createColorPool();
-    console.log("Setting new colorPool:", newColorPool); // 调试输出
-    colorPoolRef.current = [...newColorPool];
-    setColorPool([...newColorPool]); // 仅用于调试
-
-    if (backgrounds.length > nextGroup) {
-      setCurrentBackground(backgrounds[nextGroup]);
-      updateColors();
-    }
-  };
-
+  // 初始化颜色池
   useEffect(() => {
-    // 初始化 colorPool 和颜色
     const initialColorPool = createColorPool();
-    console.log("Initial colorPool:", initialColorPool); // 调试输出
     colorPoolRef.current = [...initialColorPool];
-    setColorPool([...initialColorPool]); // 仅用于调试
+    setColorPool([...initialColorPool]);
     updateColors();
-
-    const backgroundCombos = [
-      // 原始三组
-      { left: `hsl(${hsbToHsl(240, 2, 97).h}, ${hsbToHsl(240, 2, 97).s}%, ${hsbToHsl(240, 2, 97).l}%)`, right: `hsl(${hsbToHsl(240, 7, 12).h}, ${hsbToHsl(240, 7, 12).s}%, ${hsbToHsl(240, 7, 12).l}%)` },
-      { left: `hsl(${hsbToHsl(240, 2, 97).h}, ${hsbToHsl(240, 2, 97).s}%, ${hsbToHsl(240, 2, 97).l}%)`, right: `hsl(${hsbToHsl(240, 3, 58).h}, ${hsbToHsl(240, 3, 58).s}%, ${hsbToHsl(240, 3, 58).l}%)` },
-      { left: `hsl(${hsbToHsl(240, 3, 58).h}, ${hsbToHsl(240, 3, 58).s}%, ${hsbToHsl(240, 3, 58).l}%)`, right: `hsl(${hsbToHsl(240, 7, 12).h}, ${hsbToHsl(240, 7, 12).s}%, ${hsbToHsl(240, 7, 12).l}%)` },
-      // 新增三组
-      // { left: `hsl(${hsbToHsl(240, 3, 57).h}, ${hsbToHsl(240, 3, 57).s}%, ${hsbToHsl(240, 3, 57).l}%)`, right: `hsl(${hsbToHsl(240, 2, 97).h}, ${hsbToHsl(240, 2, 97).s}%, ${hsbToHsl(240, 2, 97).l}%)` },
-      // { left: `hsl(${hsbToHsl(240, 3, 11).h}, ${hsbToHsl(240, 3, 11).s}%, ${hsbToHsl(240, 3, 11).l}%)`, right: `hsl(${hsbToHsl(240, 3, 57).h}, ${hsbToHsl(240, 3, 57).s}%, ${hsbToHsl(240, 3, 57).l}%)` },
-      // { left: `hsl(${hsbToHsl(240, 3, 11).h}, ${hsbToHsl(240, 3, 11).s}%, ${hsbToHsl(240, 3, 11).l}%)`, right: `hsl(${hsbToHsl(240, 2, 97).h}, ${hsbToHsl(240, 2, 97).s}%, ${hsbToHsl(240, 2, 97).l}%)` },
-    ];
-
-    const shuffledBackgrounds = backgroundCombos.sort(() => Math.random() - 0.5);
-    setBackgrounds(shuffledBackgrounds);
-    setCurrentBackground(shuffledBackgrounds[0]);
   }, []);
 
+  // 保持原有布局结构
   return (
     <div style={{ width: '1920px', height: '1080px', display: 'flex', flexDirection: 'column' }}>
-      {showRestPrompt ? (
-        <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column' }}>
-          <h2>请休息片刻</h2>
-          <button onClick={proceedToNextGroup} className="button">继续下一组实验</button>
+      <div style={{ flex: 3, display: 'flex' }}>
+        {/* 左侧明模式显示 */}
+        <div style={{ flex: 1, backgroundColor: [hsbToHsl(240, 2, 11).h, hsbToHsl(240, 2, 11).s, hsbToHsl(240, 2, 11).l], display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ 
+            width: '60px', 
+            height: '60px', 
+            backgroundColor: `hsl(${leftHue}, ${leftSaturation}%, ${hsbToHsl(leftHue, leftSaturation, leftBrightness).l}%)` 
+          }} />
         </div>
-      ) : (
-        <>
-          <div style={{ flex: 3, display: 'flex' }}>
-            <div style={{ flex: 1, backgroundColor: currentBackground.left, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              <div style={{ width: '60px', height: '60px', backgroundColor: `hsl(${leftHue}, ${leftSaturation}%, ${hsbToHsl(leftHue, leftSaturation, leftBrightness).l}%)` }} />
-            </div>
-            <div style={{ flex: 1, backgroundColor: currentBackground.right, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              <div style={{ width: '60px', height: '60px', backgroundColor: `hsl(${hue}, ${saturation}%, ${lightness}%)` }} />
-            </div>
-          </div>
-          <div style={{ height: '180px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor:'#eeeeee' }}>
-            <div className="progressBarContainer" style={{ width: '100%', marginBottom: '10px' }}>
-              <div className="progressBar" style={{ width: `${(count / maxIterationsPerGroup) * 100}%`, height: '10px', backgroundColor: '#4caf50' }} />
-            </div>
-            <div className="container">
-              <span className="label">H:色调</span>
-              <input type="range" min="0" max="360" value={hue} className="slider sliderHue" disabled />
-              <span className="valueDisplay">{hue}</span>
-            </div>
-            <div className="container">
-              <span className="label">S:饱和</span>
-              <input type="range" min="0" max="100" value={saturation} onChange={handleSaturationChange} step='0.1' className="slider sliderSaturation" />
-              <span className="valueDisplay">{saturation}</span>
-            </div>
-            <div className="container">
-              <span className="label">V:亮度</span>
-              <input type="range" min="0" max="100" value={brightness} onChange={handleBrightnessChange} step='0.1' className="slider sliderLightness" />
-              <span className="valueDisplay">{brightness}</span>
-            </div>
-            <div className="buttonsContainer">
-              <button onClick={handleSubmit} className="button">保存</button>
-              <button onClick={handleExit} className="button">退出</button>
-              <button onClick={handleReset} className="button">重置</button>
-              <span style={{ marginLeft: '10px', marginRight: '10px' }}>组数: {currentGroup + 1} | 次数: {count + 1}</span>
-            </div>
-          </div>
-        </>
-      )}
+        
+        {/* 右侧暗模式显示 */}
+        <div style={{ flex: 1, backgroundColor: [hsbToHsl(240, 3, 97).h, hsbToHsl(240, 3, 97).s, hsbToHsl(240, 3, 97).l], display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ 
+            width: '60px', 
+            height: '60px', 
+            backgroundColor: `hsl(${hue}, ${saturation}%, ${lightness}%)` 
+          }} />
+        </div>
+      </div>
+
+      {/* 控制面板（保持原有DOM结构） */}
+      <div style={{ height: '180px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor:'#eeeeee' }}>
+        <div className="progressBarContainer" style={{ width: '100%', marginBottom: '10px' }}>
+          <div className="progressBar" style={{ 
+            width: `${(count / totalIterations) * 100}%`, 
+            height: '10px', 
+            backgroundColor: '#4caf50' 
+          }} />
+        </div>
+
+        <div className="container">
+          <span className="label">S: 饱和度</span>
+          <input 
+            type="range" 
+            min="0" 
+            max="100" 
+            value={saturation} 
+            onChange={handleSaturationChange} 
+            step="0.1"
+            className="slider sliderSaturation" 
+          />
+          <span className="valueDisplay">{saturation.toFixed(1)}%</span>
+        </div>
+
+        <div className="buttonsContainer">
+          <button onClick={handleSubmit} className="button">保存</button>
+          <span style={{ marginLeft: '10px', marginRight: '10px' }}>
+            实验次数: {count + 1}/{totalIterations}
+          </span>
+        </div>
+      </div>
     </div>
   );
 };
