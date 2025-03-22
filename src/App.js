@@ -149,6 +149,14 @@ const App = () => {
     return [header, ...rows].map(e => e.join(",")).join("\n");
   };
 
+  // 在组件顶部定义常量
+  const leftBgHSB = { h: 240, s: 2, v: 97 };
+  const rightBgHSB = { h: 240, s: 3, v: 11 };
+
+  // 转换为HSL
+  const leftBgHSL = hsbToHsl(leftBgHSB.h, leftBgHSB.s, leftBgHSB.v);
+  const rightBgHSL = hsbToHsl(rightBgHSB.h, rightBgHSB.s, rightBgHSB.v);
+
   // 初始化颜色池
   useEffect(() => {
     const initialColorPool = createColorPool();
@@ -162,7 +170,7 @@ const App = () => {
     <div style={{ width: '1920px', height: '1080px', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: 3, display: 'flex' }}>
         {/* 左侧明模式显示 */}
-        <div style={{ flex: 1, backgroundColor: [hsbToHsl(240, 2, 97).h, hsbToHsl(240, 2, 97).s, hsbToHsl(240, 2, 97).l], display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <div style={{ flex: 1, backgroundColor: `hsl(${leftBgHSL.h}, ${leftBgHSL.s}%, ${leftBgHSL.l}%)`, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <div style={{ 
             width: '60px', 
             height: '60px', 
@@ -171,7 +179,7 @@ const App = () => {
         </div>
         
         {/* 右侧暗模式显示 */}
-        <div style={{ flex: 1, backgroundColor: [hsbToHsl(240, 3, 11).h, hsbToHsl(240, 3, 11).s, hsbToHsl(240, 3, 11).l], display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <div style={{ flex: 1, backgroundColor: `hsl(${rightBgHSL.h}, ${rightBgHSL.s}%, ${rightBgHSL.l}%)`, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <div style={{ 
             width: '60px', 
             height: '60px', 
